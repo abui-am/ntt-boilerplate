@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
 import { HiBookmark, HiHome, HiSearch, HiSupport, HiX } from 'react-icons/hi';
 
-import volume from '@/api/books';
 import { TextField } from '@/components/Fields';
 import { useKeyPressEnter } from '@/hooks/onKeyPress';
 import useWindowDistance from '@/hooks/useHideOnScroll';
@@ -27,7 +25,6 @@ const BaseLayout: React.FC = ({ children }) => {
             <HiHome
               onClick={() => {
                 push('/');
-                setHide(false);
               }}
               className="w-6 h-6 text-gray-600"
             />
@@ -46,8 +43,9 @@ const BaseLayout: React.FC = ({ children }) => {
 
 const AppBar = () => {
   const [focus, setOnFocus] = useState(false);
-  const [query, setQuery] = useState('');
-  const { push } = useRouter();
+  const { push, pathname, query: q } = useRouter();
+
+  const [query, setQuery] = useState<string>(q.search as string);
 
   const isHide = useWindowDistance();
   const [vert, setVert] = useState(0);
@@ -68,6 +66,10 @@ const AppBar = () => {
       setVert(isHide.vertical);
     }
   }, [isHide.vertical, vert]);
+
+  useEffect(() => {
+    setHide(false);
+  }, [pathname]);
   return (
     <div
       className="w-full py-3 bg-white -mx-4 px-4 -mt-4 max-w-md"

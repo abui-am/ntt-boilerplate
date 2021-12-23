@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 import volume from '@/api/books';
+import { useKeyPressEnter } from '@/hooks/onKeyPress';
 import { Item } from '@/typings/books';
 
 const Home: NextPage = () => {
@@ -13,8 +14,6 @@ const Home: NextPage = () => {
     if (query.search) fetchData(query.search as string);
   }, [query.search]);
 
-  const router = useRouter();
-
   const fetchData = async (q: string) => {
     volume
       .getAll({
@@ -23,24 +22,33 @@ const Home: NextPage = () => {
         },
       })
       .then(({ data }) => {
-        setData(data.items);
+        setData(data.items ?? []);
       });
   };
 
   return (
     <div>
+      {data.length === 0 && (
+        <div
+          style={{
+            height: '75vh',
+          }}
+          className="flex justify-center items-center"
+        >
+          Data not found
+        </div>
+      )}
       {data.length > 0 ? <h2 className="text-xl mb-4 font-bold">Book Search</h2> : ''}
       {data.map((item) => {
         return (
           <div className="w-full mb-4 flex rounded-md py-2" key={item.id}>
-            <img className="w-32 h-48 object-cover rounded-md" src={item.volumeInfo.imageLinks?.smallThumbnail} />
+            <img
+              alt="apaan"
+              className="w-32 h-48 object-cover rounded-md"
+              src={item.volumeInfo.imageLinks?.smallThumbnail}
+            />
             <div className="ml-6 flex-1">
-              <h2
-                className="text-lg mb-2 font-bold text-gray-900 hover:text-indigo-600 cursor-pointer"
-                onClick={() => router.push(`/books/${item.id}`)}
-              >
-                {item.volumeInfo.title}
-              </h2>
+              <Title itemId={item.id} title={item.volumeInfo.title} />
               {item.volumeInfo.publisher && (
                 <div className="text-sm text-gray-600">Published by {item.volumeInfo.publisher}</div>
               )}
@@ -50,6 +58,18 @@ const Home: NextPage = () => {
           </div>
         );
       })}
+    </div>
+  );
+};
+
+const Title: React.FC<{ itemId: string; title: string }> = ({ itemId, title }) => {
+  const router = useRouter();
+  const handleKeyPress = useKeyPressEnter(() => {
+    router.push(`/books/${itemId}`);
+  });
+  return (
+    <div role="button" tabIndex={0} onKeyPress={handleKeyPress} onClick={() => router.push(`/books/${itemId}`)}>
+      <h2 className="text-lg mb-2 font-bold text-gray-900 hover:text-indigo-600 cursor-pointer">{title}</h2>
     </div>
   );
 };
